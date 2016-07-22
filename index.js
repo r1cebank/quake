@@ -33,5 +33,5 @@ app.listen(port, function () {
 /// PING
 var http = require("http");
 setInterval(function() {
-    http.get('https://quake.herokuapp.com/');
+    http.get('http://quake.herokuapp.com/');
 }, 300000); // every 5 minutes (300000)
