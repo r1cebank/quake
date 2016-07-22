@@ -33,7 +33,7 @@ function startPulling(collection) {
                 });
             });
         });
-    }, 60000);
+    }, 3600000);
 }
 
 MongoClient.connect(process.env.MONGODB_URI, function(err, db) {
