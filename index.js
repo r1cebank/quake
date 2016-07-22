@@ -14,7 +14,7 @@ MongoClient.connect(process.env.MONGODB_URI, function(err, db) {
         HTTPClient(APIURI).then(function (response) {
             var data = JSON.parse(response);
             collection.insertMany(data, function (err, result) {
-                if(result) {
+                if(!!result.nInserted) {
                     console.log(`inserted ${result.nInserted} documents`);
                 }
             });
