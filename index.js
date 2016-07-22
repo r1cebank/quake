@@ -1,5 +1,6 @@
 var HTTPClient =  require('request-promise');
 var Promise = require('bluebird');
+var Moment = require('moment-timezone');
 var utf8 = require('utf8');
 var MongoClient = require('mongodb').MongoClient;
 var format = require("string-template")
@@ -19,6 +20,7 @@ function startPulling(collection) {
                 return dataEntry.earthquake;
             });
             Promise.all(data.map(function (entry) {
+                entry.time = Moment.tz(entry.time, 'Asia/Tokyo').format();
                 return Promise.all(entry.points.map(function (point) {
                     var url = format(GeocodeAPI, {addr: utf8.encode(point.addr)});
                     return HTTPClient(url).then(function (value) {
