@@ -29,3 +29,9 @@ app.get('/', function (req, res) {
 app.listen(port, function () {
     console.log(`Example app listening on port ${port}!`);
 });
+
+/// PING
+var http = require("http");
+setInterval(function() {
+    http.get('https://quake.herokuapp.com/');
+}, 300000); // every 5 minutes (300000)
