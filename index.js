@@ -1,6 +1,7 @@
 var HTTPClient =  require('request-promise');
 var Promise = require('bluebird');
 var Moment = require('moment-timezone');
+var GeoJSON = require('geojson');
 var utf8 = require('utf8');
 var MongoClient = require('mongodb').MongoClient;
 var format = require("string-template");
@@ -50,6 +51,23 @@ MongoClient.connect(process.env.MONGODB_URI, function(err, db) {
     app.get('/quakes', function (req, res) {
         collection.find().toArray(function(error, result) {
             res.send(result);
+        });
+    });
+    app.get('/geojson', function (req, res) {
+        collection.find().toArray(function(error, result) {
+            var events = [];
+            result.map(function (event) {
+                if (event.earthquake.hypocenter.magnitude !== '-1') {
+                    events.push({
+                        name: event.earthquake.hypocenter.name,
+                        magnitude : event.earthquake.hypocenter.magnitude,
+                        latitude: event.earthquake.hypocenter.latitude,
+                        longitude: event.earthquake.hypocenter.longitude,
+                        points: event.points
+                    });
+                }
+            });
+            res.send(GeoJSON.parse(events, {Point: ['latitude', 'longitude']}));
         });
     });
 
