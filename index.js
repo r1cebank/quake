@@ -46,7 +46,7 @@ MongoClient.connect(process.env.MONGODB_URI, function(err, db) {
     var collection = db.collection('quakes');
     startPulling(collection);
     app.get('/', function (req, res) {
-        res.send('pong');
+        res.sendFile(__dirname + '/client/index.html');
     });
     app.get('/quakes', function (req, res) {
         collection.find().toArray(function(error, result) {
@@ -61,8 +61,8 @@ MongoClient.connect(process.env.MONGODB_URI, function(err, db) {
                     events.push({
                         name: event.earthquake.hypocenter.name,
                         magnitude : event.earthquake.hypocenter.magnitude,
-                        latitude: event.earthquake.hypocenter.latitude,
-                        longitude: event.earthquake.hypocenter.longitude,
+                        latitude: event.earthquake.hypocenter.latitude.substring(1),
+                        longitude: event.earthquake.hypocenter.longitude.substring(1),
                         points: event.points
                     });
                 }

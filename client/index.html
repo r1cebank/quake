@@ -1,6 +1,7 @@
 <html>
     <head>
         <script src='https://api.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.js'></script>
+        <title>Quakes for Japan</title>
         <link href='https://api.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.css' rel='stylesheet' />
     </head>
     <body>
@@ -13,45 +14,86 @@
                 center: new mapboxgl.LngLat(138.2529, 36.2048),
                 style: 'mapbox://styles/mapbox/dark-v9'
             });
-// http://nominatim.openstreetmap.org/search?q=%E6%B0%B4%E6%88%B8%E5%B8%82&format=json
-map.on('load', function () {
-    map.addSource("points", {
-        "type": "geojson",
-        "data": {
-            "type": "FeatureCollection",
-            "features": [{
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [140.0, 36.0]
-                },
-                "properties": {
-                    "magnitude": 3.6,
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [131.2, 33.0]
-                },
-                "properties": {
-                    "magnitude": 3.6,
-                }
-            }]
-        }
-    });
+            // When a click event occurs near a place, open a popup at the location of
+            // the feature, with description HTML from its properties.
+            map.on('click', function (e) {
+                var features = map.queryRenderedFeatures(e.point, { layers: ['places'] });
 
-    map.addLayer({
-        "id": "points",
-        "source": "points",
-        "type": "circle",
-        "paint": {
-            "circle-radius": 10,
-            "circle-color": "#007cbf"
-        }
-    });
-});
+                if (!features.length) {
+                    return;
+                }
+
+                var feature = features[0];
+
+                // Populate the popup and set its coordinates
+                // based on the feature found.
+                var popup = new mapboxgl.Popup()
+                        .setLngLat(feature.geometry.coordinates)
+                        .setHTML(feature.properties.magnitude)
+                        .addTo(map);
+            });
+
+            // Use the same approach as above to indicate that the symbols are clickable
+            // by changing the cursor style to 'pointer'.
+            map.on('mousemove', function (e) {
+                var features = map.queryRenderedFeatures(e.point, { layers: ['places'] });
+                map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+            });
+// http://nominatim.openstreetmap.org/search?q=%E6%B0%B4%E6%88%B8%E5%B8%82&format=json
+            map.on('load', function() {
+
+                // Add a new source from our GeoJSON data and set the
+                // 'cluster' option to true.
+                map.addSource("earthquakes", {
+                    type: "geojson",
+                    // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
+                    // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
+                    data: "http://localhost:3939/geojson",
+                    cluster: true,
+                    clusterMaxZoom: 15, // Max zoom to cluster points on
+                    clusterRadius: 20 // Use small cluster radius for the heatmap look
+                });
+
+                // Use the earthquakes source to create four layers:
+                // three for each cluster category, and one for unclustered points
+
+                // Each point range gets a different fill color.
+                var layers = [
+                    [0, 'green'],
+                    [20, 'orange'],
+                    [200, 'red']
+                ];
+
+                layers.forEach(function (layer, i) {
+                    map.addLayer({
+                        "id": "cluster-" + i,
+                        "type": "circle",
+                        "source": "earthquakes",
+                        "paint": {
+                            "circle-color": layer[1],
+                            "circle-radius": 70,
+                            "circle-blur": 1 // blur the circles to get a heatmap look
+                        },
+                        "filter": i === layers.length - 1 ?
+                                [">=", "point_count", layer[0]] :
+                                ["all",
+                                    [">=", "point_count", layer[0]],
+                                    ["<", "point_count", layers[i + 1][0]]]
+                    }, 'waterway-label');
+                });
+
+                map.addLayer({
+                    "id": "unclustered-points",
+                    "type": "circle",
+                    "source": "earthquakes",
+                    "paint": {
+                        "circle-color": 'rgba(0,255,0,0.5)',
+                        "circle-radius": 20,
+                        "circle-blur": 1
+                    },
+                    "filter": ["!=", "cluster", true]
+                }, 'waterway-label');
+            });
         </script>
     </body>
 </html>
