@@ -45,6 +45,11 @@ MongoClient.connect(process.env.MONGODB_URI, function(err, db) {
     console.log("Connected correctly to server");
     var collection = db.collection('quakes');
     startPulling(collection);
+    app.use(function(req, res, next) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        next();
+    });
     app.get('/', function (req, res) {
         res.sendFile(__dirname + '/client/index.html');
     });
