@@ -3,8 +3,10 @@ var Promise = require('bluebird');
 var Moment = require('moment-timezone');
 var utf8 = require('utf8');
 var MongoClient = require('mongodb').MongoClient;
-var format = require("string-template")
+var format = require("string-template");
 var express = require('express');
+/// PING
+var http = require('http');
 var app = express();
 
 var port = process.env.PORT || 3939;
@@ -42,18 +44,20 @@ MongoClient.connect(process.env.MONGODB_URI, function(err, db) {
     console.log("Connected correctly to server");
     var collection = db.collection('quakes');
     startPulling(collection);
-});
+    app.get('/', function (req, res) {
+        res.send('pong');
+    });
+    app.get('/quakes', function (req, res) {
+        collection.find().toArray(function(error, result) {
+            res.send(result);
+        });
+    });
 
-app.get('/', function (req, res) {
-    res.send('pong');
-});
+    app.listen(port, function () {
+        console.log(`Example app listening on port ${port}!`);
+    });
+    setInterval(function() {
+        http.get('http://quake.herokuapp.com/');
+    }, 300000); // every 5 minutes (300000)
 
-app.listen(port, function () {
-    console.log(`Example app listening on port ${port}!`);
 });
-
-/// PING
-var http = require("http");
-setInterval(function() {
-    http.get('http://quake.herokuapp.com/');
-}, 300000); // every 5 minutes (300000)
